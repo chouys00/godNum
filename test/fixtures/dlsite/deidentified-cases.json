@@ -1,0 +1,13 @@
+{
+  "candidate": {
+    "productId": "RJ01234567",
+    "title": "架空作品 日本語",
+    "circles": ["虛構社團"],
+    "authors": ["作者甲"],
+    "languageHints": ["日本語"],
+    "versionHints": ["DL版"],
+    "productUrl": "https://www.dlsite.com/maniax/work/=/product_id/RJ01234567.html",
+    "thumbnailUrl": "https://img.dlsite.jp/modpub/images2/work/doujin/RJ01230000/RJ01234567_img_main.jpg",
+    "evidence": "search-result product anchor"
+  }
+}

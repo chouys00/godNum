@@ -1,0 +1,1 @@
+{"manifest_version":3,"permissions":["sidePanel","storage","tabs","scripting"],"host_permissions":["https://nhentai.net/*","https://www.dlsite.com/*"],"content_security_policy":{"extension_pages":"script-src 'self'; object-src 'self'"}}

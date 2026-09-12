@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "DLsite Feasibility Probe",
+  "version": "0.2.0",
+  "description": "Collects a bounded snapshot from a user-opened DLsite search or product page.",
+  "minimum_chrome_version": "114",
+  "permissions": ["tabs"],
+  "host_permissions": ["https://www.dlsite.com/*"],
+  "action": {
+    "default_title": "DLsite Feasibility Probe",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.dlsite.com/*"],
+      "js": ["extractor.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

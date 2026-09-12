@@ -1,0 +1,56 @@
+{
+  "complete": {
+    "number": "460733",
+    "sourceUrl": "https://nhentai.net/g/460733/",
+    "snapshots": [
+      {
+        "sourceType": "same_origin_api",
+        "values": {
+          "titleJapanese": "架空作品 日本語",
+          "titleEnglish": "Fictional Work English",
+          "titleDisplay": "Fictional Work",
+          "authors": ["作者甲"],
+          "groups": ["社團乙"],
+          "pageCount": 24
+        },
+        "locators": {
+          "titleJapanese": "api.gallery.title.japanese",
+          "titleEnglish": "api.gallery.title.english",
+          "titleDisplay": "api.gallery.title.pretty",
+          "authors": "api.gallery.tags[type=artist].name",
+          "groups": "api.gallery.tags[type=group].name",
+          "pageCount": "api.gallery.num_pages"
+        }
+      }
+    ]
+  },
+  "fallback": {
+    "number": "299075",
+    "sourceUrl": "https://nhentai.net/g/299075/",
+    "snapshots": [
+      {
+        "sourceType": "same_origin_api",
+        "values": { "titleEnglish": "API English" },
+        "locators": { "titleEnglish": "api.gallery.title.english" }
+      },
+      {
+        "sourceType": "embedded_structured_data",
+        "values": { "titleJapanese": "內嵌日文", "titleEnglish": "Embedded English" },
+        "locators": {
+          "titleJapanese": "script[type=application/json].title.japanese",
+          "titleEnglish": "script[type=application/json].title.english"
+        }
+      },
+      {
+        "sourceType": "standard_metadata",
+        "values": { "titleDisplay": "中繼資料標題" },
+        "locators": { "titleDisplay": "meta[property=og:title]@content" }
+      },
+      {
+        "sourceType": "dom",
+        "values": { "titleDisplay": "DOM 標題", "groups": ["DOM 社團"] },
+        "locators": { "titleDisplay": "#info h1", "groups": "#tags .group .name" }
+      }
+    ]
+  }
+}

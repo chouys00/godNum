@@ -1,0 +1,1 @@
+const cookie = document.cookie;

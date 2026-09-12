@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DLsite 可行性 Probe</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <h1>DLsite 可行性 Probe</h1>
+    <label for="section">DLsite 分區</label>
+    <select id="section">
+      <option value="books" selected>書籍（books）</option>
+      <option value="maniax">同人（maniax）</option>
+      <option value="home">一般（home）</option>
+    </select>
+    <label for="title">作品標題</label>
+    <div class="row">
+      <input id="title" type="text" maxlength="300" autocomplete="off">
+      <button id="open-search" type="button">開啟搜尋</button>
+    </div>
+    <button id="capture" type="button">擷取目前分頁</button>
+    <p id="status" role="status" aria-live="polite"></p>
+    <label for="output">精簡驗證結果</label>
+    <textarea id="output" rows="18" readonly></textarea>
+  </main>
+  <script src="extractor.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

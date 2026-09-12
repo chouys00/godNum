@@ -1,0 +1,9 @@
+{
+  "name": "god-number-lookup",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/run-tests.mjs",
+    "quality": "node test/run-quality-gate.mjs"
+  }
+}

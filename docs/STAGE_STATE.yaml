@@ -1,0 +1,44 @@
+schema_version: 2
+plan_revision: 6
+profile: audited
+
+stage_sequence:
+  - A1
+  - A2
+  - B1
+  - B2
+  - B3
+  - F1
+  - V1
+  - V2
+  - V3
+  - C1
+  - I1
+  - I2
+  - A6
+
+active_stage: A6
+stage_status: implementation_complete
+gate_result: CONCERNS
+last_assessment_date: 2026-09-12
+last_assessment_outcome: v0_3_0_offline_quality_pass_chrome_validation_pending
+next_stage: A6
+handoff_mode: validate-current-stage
+review_required: true
+checkpoint_policy: record-only
+blocking_acceptance_open: true
+
+execution:
+  mode: sequential
+  active_parallel_group: null
+  max_workers: 3
+
+documents:
+  spec: docs/PROJECT_SPEC.md
+  roadmap: docs/PROJECT_ROADMAP.md
+  status: docs/DEVELOPMENT_STATUS.md
+  log: docs/DEVELOPMENT_LOG.md
+  decisions: docs/DECISIONS.md
+  handoff: docs/NEXT_TASK_HANDOFF.md
+  acceptance: docs/ACCEPTANCE.md
+  supplemental_validation: docs/SUPPLEMENTAL_VALIDATION.md

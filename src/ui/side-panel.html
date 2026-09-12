@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>God Number Lookup</title>
+    <link rel="stylesheet" href="side-panel.css">
+  </head>
+  <body>
+    <main>
+      <h1>God Number Lookup</h1>
+      <form id="lookup-form" novalidate>
+        <label for="lookup-number">六位數號碼</label>
+        <input id="lookup-number" name="lookup-number" inputmode="numeric" autocomplete="off" maxlength="6" pattern="[0-9]{6}" required aria-describedby="format-help">
+        <p id="format-help">輸入六位半形阿拉伯數字。</p>
+        <button type="submit">開啟來源頁</button>
+      </form>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <section id="source-result" hidden aria-labelledby="source-heading">
+        <h2 id="source-heading">來源資料</h2>
+        <dl id="source-fields"></dl>
+        <p id="source-detail"></p>
+        <button id="retry-source" type="button">重新擷取來源資料</button>
+      </section>
+      <section id="dlsite-result" hidden aria-labelledby="dlsite-heading">
+        <h2 id="dlsite-heading">DLsite 候選</h2>
+        <p id="dlsite-detail"></p>
+        <ul id="dlsite-candidates"></ul>
+        <button id="stop-dlsite" type="button">停止 DLsite 搜尋</button>
+      </section>
+      <button id="copy-diagnostics" type="button">複製診斷摘要</button>
+      <button id="clear-history" type="button">清除本機紀錄</button>
+    </main>
+    <script type="module" src="side-panel.js"></script>
+  </body>
+</html>

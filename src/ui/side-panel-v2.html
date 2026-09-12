@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>God Number Lookup</title>
+    <link rel="stylesheet" href="side-panel.css">
+  </head>
+  <body>
+    <main>
+      <h1>God Number Lookup</h1>
+      <form id="lookup-form" novalidate>
+        <label for="lookup-number">六位數號碼</label>
+        <input id="lookup-number" name="lookup-number" inputmode="numeric" autocomplete="off" maxlength="6" pattern="[0-9]{6}" required aria-describedby="format-help">
+        <p id="format-help">查詢中文版本，並在本機把原始標題翻成繁體中文。</p>
+        <button id="lookup-button" type="submit">查詢</button>
+      </form>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+      <section id="result" hidden aria-labelledby="result-heading">
+        <h2 id="result-heading">作品資料</h2>
+        <dl id="source-fields"></dl>
+      </section>
+
+      <section id="translation-result" hidden aria-labelledby="translation-heading">
+        <h2 id="translation-heading">本機離線翻譯</h2>
+        <p id="translation-status" role="status" aria-live="polite"></p>
+        <p id="translated-title"></p>
+        <p class="note">此名稱是機器直譯，不代表正式譯名或既有中文別名。</p>
+        <button id="retry-translation" type="button" hidden>重試本機翻譯</button>
+      </section>
+
+      <section id="chinese-versions" hidden aria-labelledby="versions-heading">
+        <h2 id="versions-heading">中文版本</h2>
+        <p id="versions-status"></p>
+        <ul id="version-links"></ul>
+      </section>
+    </main>
+    <script type="module" src="side-panel-v2.js"></script>
+  </body>
+</html>
