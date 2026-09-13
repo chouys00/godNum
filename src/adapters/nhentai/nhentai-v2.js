@@ -32,7 +32,6 @@ export function parseGalleryResponse(value, expectedNumber) {
 
   const tags = Array.isArray(value.tags) ? value.tags.slice(0, 200) : [];
   const searchTitle = stripTitleMetadata(rawTitle);
-  const translationTitle = stripTitleMetadata(japaneseTitle || displayTitle || englishTitle);
   if (!searchTitle) throw new TypeError("作品標題無法建立搜尋字串。");
 
   return {
@@ -41,8 +40,6 @@ export function parseGalleryResponse(value, expectedNumber) {
     japaneseTitle,
     englishTitle,
     displayTitle,
-    translationTitle,
-    translationLanguage: japaneseTitle && containsJapanese(translationTitle) ? "ja" : "en",
     searchTitle,
     credit: leadingCredit(rawTitle),
     artists: tagNames(tags, "artist"),

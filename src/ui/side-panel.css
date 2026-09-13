@@ -15,7 +15,6 @@ p { margin: 0; }
 .source-fields { display: grid; grid-template-columns: max-content 1fr; gap: 4px 10px; margin: 0; }
 .source-fields dt { font-weight: 600; }
 .source-fields dd { margin: 0; overflow-wrap: anywhere; }
-.translation-result, .chinese-versions { display: grid; gap: 8px; }
-.note { font-size: 0.875rem; opacity: 0.8; }
+.chinese-versions { display: grid; gap: 8px; }
 a { overflow-wrap: anywhere; }
 [hidden] { display: none !important; }

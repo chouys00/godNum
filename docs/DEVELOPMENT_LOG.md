@@ -270,3 +270,20 @@
 - 實作：v0.3.3 新增安全的搜尋欄位 renderer；非空值以 `<a>` 呈現，點擊時呼叫 `chrome.search.query` 並在新分頁使用 Chrome 預設搜尋引擎。缺值維持不可點擊的「未提供」。
 - 權限：manifest 新增最小必要 `search` 權限；未新增 Google 或其他搜尋網域的 host permission，亦未保存查詢。
 - 驗證：`node test/run-tests.mjs` 與 `node test/run-quality-gate.mjs` 通過；49 個 JavaScript 檔案、manifest、CSP、權限、禁止 API、語法、離線測試及七種違規 fixture 均通過。Chrome 實際搜尋行為仍列入 SUP-A6-001。
+
+## 2026-09-13｜修訂 10／完整移除本機離線翻譯
+
+- 使用者需求：刪除本機離線翻譯功能，以及相關代碼、依賴與資源，並確認無殘留。
+- 實作：移除 side panel 的 Translator 建立、翻譯結果區、進度、重試與清理流程；刪除 `src/core/offline-translation.js` 及 `test/translation/offline-translation.test.mjs`；移除測試入口與品質閘門引用。來源 schema 不再產生 `translationTitle` 或 `translationLanguage`，原始標題顯示改用 `searchTitle`。
+- Manifest：版本升為 0.4.0、描述移除翻譯，最低 Chrome 版本由 138 恢復為 114；權限仍只有 `sidePanel`、`search` 與精確 nhentai host permission。
+- 驗證：`node test/run-tests.mjs` 與 `node test/run-quality-gate.mjs` 通過；品質閘門掃描 47 個 JavaScript 檔案及七種違規 fixture。對 `src/`、`test/`、manifest 與 package 執行全域搜尋，未找到翻譯模組、API、UI、欄位或資源引用；`git diff --check` 通過。Chrome 實機仍由 SUP-A6-001 追蹤。
+
+## 2026-09-13｜結果介面文案與排版調整
+
+- 將主要按鈕「批次查詢」改為「查詢」、區塊「批次結果」改為「結果」，完成狀態移除查詢保存文案。
+- 每筆結果標題整合為「作品資料（六位數號碼）」，不再重複顯示「號碼」與「作品資料」標題。
+- 有中文版本時只顯示連結清單，移除「找到 N 個通過同作核對的中文版本」提示；無結果和搜尋失敗訊息維持不變。
+
+## 2026-09-13｜欄位搜尋連結中鍵支援
+
+- 原始標題、作者／署名與社團的搜尋連結新增 `auxclick` 處理；以滑鼠中鍵點擊時會阻止 `#` 的預設開啟行為，並與左鍵相同透過 Chrome 預設搜尋引擎建立新分頁查詢。

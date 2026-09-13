@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "God Number Lookup",
-  "version": "0.3.3",
-  "description": "Find matching Chinese editions and translate source titles locally.",
-  "minimum_chrome_version": "138",
+  "version": "0.4.0",
+  "description": "Batch lookup source metadata and matching Chinese editions.",
+  "minimum_chrome_version": "114",
   "permissions": ["sidePanel", "search"],
   "host_permissions": ["https://nhentai.net/*"],
   "action": {

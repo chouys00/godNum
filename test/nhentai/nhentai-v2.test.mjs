@@ -23,8 +23,7 @@ const gallery = {
 };
 
 const source = parseGalleryResponse(gallery, "123456");
-assert.equal(source.translationTitle, "作品タイトル ～第一話～");
-assert.equal(source.translationLanguage, "ja");
+assert.equal(source.searchTitle, "作品タイトル ～第一話～");
 assert.deepEqual(source.artists, ["author-original"]);
 assert.deepEqual(source.groups, ["group-original"]);
 assert.equal(buildGalleryApiUrl("123456"), "https://nhentai.net/api/v2/galleries/123456");
@@ -86,8 +85,7 @@ const englishOnly = parseGalleryResponse({
   tags: [],
   num_pages: 20
 }, "234567");
-assert.equal(englishOnly.translationTitle, "English Only");
-assert.equal(englishOnly.translationLanguage, "en");
+assert.equal(englishOnly.searchTitle, "English Only");
 
 const romanizedJapaneseField = parseGalleryResponse({
   id: 345678,
@@ -95,7 +93,6 @@ const romanizedJapaneseField = parseGalleryResponse({
   tags: [],
   num_pages: 20
 }, "345678");
-assert.equal(romanizedJapaneseField.translationTitle, "Romanized Title");
-assert.equal(romanizedJapaneseField.translationLanguage, "en");
+assert.equal(romanizedJapaneseField.searchTitle, "Romanized Title");
 
 console.log("nhentai-v2.test.mjs: all assertions passed");

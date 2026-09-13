@@ -17,7 +17,7 @@ assert.match(script, /作者／署名（原文）/);
 assert.match(script, /addSearchField\(fields, "原始標題"/);
 assert.match(script, /addSearchField\(fields, "社團"/);
 assert.match(script, /chrome\.search\.query/);
-assert.match(script, /retryButton\.onclick = async/);
+assert.match(script, /addEventListener\("auxclick"/);
 assert.match(script, /link\.rel = "noreferrer"/);
 assert.match(css, /:focus-visible/);
 assert.doesNotMatch(script, /\.innerHTML\s*=/);

@@ -1,4 +1,3 @@
-import { createOfflineTranslator, translateWithPreparedTranslator } from "../core/offline-translation.js";
 import { validateBatchLookupNumbers } from "../core/lookup.js";
 
 const form = document.querySelector("#lookup-form");
@@ -13,10 +12,6 @@ function showStatus(message, kind = "info") {
   status.dataset.kind = kind;
 }
 
-function prepareTranslator(language) {
-  return createOfflineTranslator(language).then((translator) => ({ translator }), (error) => ({ error }));
-}
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const validation = validateBatchLookupNumbers(input.value);
@@ -28,36 +23,32 @@ form.addEventListener("submit", async (event) => {
   input.setAttribute("aria-invalid", "false");
   clearResults();
 
-  // Translator.create 必須由使用者操作觸發；兩個語言組合都要在第一次 await 前建立。
-  const translatorPromises = { ja: prepareTranslator("ja"), en: prepareTranslator("en") };
   lookupButton.disabled = true;
   showStatus(`正在依序查詢 ${validation.value.length} 組來源資料與中文版本；10 組通常約需一分鐘，來源較慢時可能更久。`);
   try {
     const response = await chrome.runtime.sendMessage({ type: "BATCH_LOOKUP", numbers: validation.value });
     if (!response?.ok || !Array.isArray(response.results)) {
       input.setAttribute("aria-invalid", "true");
-      showStatus(response?.error || "批次查詢失敗。", "error");
+      showStatus(response?.error || "查詢失敗。", "error");
       return;
     }
-    await renderBatchResults(response.results, translatorPromises);
+    renderBatchResults(response.results);
     const completed = response.results.filter((entry) => entry.ok).length;
-    showStatus(`批次完成：${completed}/${response.results.length} 組已取得資料。產品未保存本次查詢。`);
+    showStatus(`查詢完成：${completed}/${response.results.length} 組已取得資料。`);
   } catch (error) {
-    showStatus(error?.message || "批次查詢失敗。", "error");
+    showStatus(error?.message || "查詢失敗。", "error");
   } finally {
     lookupButton.disabled = false;
-    destroyPreparedTranslators(translatorPromises);
   }
 });
 
-async function renderBatchResults(entries, translatorPromises) {
+function renderBatchResults(entries) {
   resultsSection.hidden = false;
-  const translationTasks = [];
   for (const entry of entries) {
     const card = document.createElement("article");
     card.className = "batch-result";
     const heading = document.createElement("h3");
-    heading.textContent = `號碼 ${entry.number}`;
+    heading.textContent = `作品資料（${entry.number}）`;
     card.append(heading);
     if (!entry.ok) {
       addMessage(card, entry.error || "查詢失敗。", "error");
@@ -66,66 +57,18 @@ async function renderBatchResults(entries, translatorPromises) {
     }
     renderSource(card, entry.result.source);
     renderVersions(card, entry.result.chineseVersions, entry.result.versionsError);
-    const translation = renderTranslationArea(card);
     resultList.append(card);
-    translationTasks.push({ source: entry.result.source, ...translation });
-  }
-  for (let index = 0; index < translationTasks.length; index += 1) {
-    showStatus(`正在翻譯 ${index + 1}/${translationTasks.length} 組原始標題…`);
-    await renderTranslation(translationTasks[index], translatorPromises);
   }
 }
 
 function renderSource(card, source) {
-  const heading = document.createElement("h4");
   const fields = document.createElement("dl");
-  heading.textContent = "作品資料";
   fields.className = "source-fields";
-  addSearchField(fields, "原始標題", source.translationTitle);
+  addSearchField(fields, "原始標題", source.searchTitle);
   addSearchField(fields, "作者／署名（原文）", source.credit || source.artists?.join("、"));
   addSearchField(fields, "社團", source.groups?.join("、"));
   addLinkField(fields, "來源頁", source.sourceUrl, source.sourceUrl);
-  card.append(heading, fields);
-}
-
-function renderTranslationArea(card) {
-  const section = document.createElement("section");
-  const heading = document.createElement("h4");
-  const translationStatus = document.createElement("p");
-  const translatedTitle = document.createElement("p");
-  const note = document.createElement("p");
-  const retryButton = document.createElement("button");
-  section.className = "translation-result";
-  heading.textContent = "本機離線翻譯";
-  translationStatus.setAttribute("role", "status");
-  translationStatus.setAttribute("aria-live", "polite");
-  translationStatus.textContent = "正在準備本機語言包…";
-  note.className = "note";
-  note.textContent = "此名稱是機器直譯，不代表正式譯名或既有中文別名。";
-  retryButton.type = "button";
-  retryButton.textContent = "重試本機翻譯";
-  retryButton.hidden = true;
-  section.append(heading, translationStatus, translatedTitle, note, retryButton);
-  card.append(section);
-  return { translationStatus, translatedTitle, retryButton };
-}
-
-async function renderTranslation(task, translatorPromises) {
-  const { source, translationStatus, translatedTitle, retryButton } = task;
-  const prepared = await translatorPromises[source.translationLanguage];
-  if (prepared?.error) {
-    translationStatus.textContent = prepared.error.message || "無法準備本機翻譯器。";
-    attachRetryTranslation(task);
-    return;
-  }
-  try {
-    translatedTitle.textContent = await translateWithPreparedTranslator(prepared.translator, source.translationTitle);
-    translationStatus.textContent = `由 ${source.translationLanguage === "ja" ? "日文" : "英文"} 離線翻譯為繁體中文。`;
-    retryButton.hidden = true;
-  } catch (error) {
-    translationStatus.textContent = error?.message || "本機翻譯失敗。";
-    attachRetryTranslation(task);
-  }
+  card.append(fields);
 }
 
 function renderVersions(card, versions, error) {
@@ -139,7 +82,7 @@ function renderVersions(card, versions, error) {
   if (error) message.textContent = `中文版本搜尋失敗：${error}`;
   else if (!Array.isArray(versions) || versions.length === 0) message.textContent = "沒有找到通過同作核對的中文版本。";
   else {
-    message.textContent = `找到 ${versions.length} 個通過同作核對的中文版本：`;
+    message.remove();
     for (const version of versions) {
       const item = document.createElement("li");
       const link = document.createElement("a");
@@ -165,9 +108,13 @@ function addSearchField(fields, label, value) {
     const link = document.createElement("a");
     link.href = "#";
     link.textContent = searchText;
-    link.addEventListener("click", (event) => {
+    const openSearch = (event) => {
       event.preventDefault();
       chrome.search.query({ text: searchText, disposition: "NEW_TAB" });
+    };
+    link.addEventListener("click", openSearch);
+    link.addEventListener("auxclick", (event) => {
+      if (event.button === 1) openSearch(event);
     });
     description.append(link);
   }
@@ -196,40 +143,4 @@ function addMessage(parent, message, kind) {
 function clearResults() {
   resultList.replaceChildren();
   resultsSection.hidden = true;
-}
-
-function attachRetryTranslation(task) {
-  const { source, translationStatus, translatedTitle, retryButton } = task;
-  retryButton.hidden = false;
-  retryButton.onclick = async () => {
-    retryButton.disabled = true;
-    translationStatus.textContent = "正在準備本機語言包…";
-    let translator;
-    try {
-      translator = await createOfflineTranslator(source.translationLanguage, (progress) => {
-        translationStatus.textContent = Number.isInteger(progress)
-          ? `第一次使用需下載免費語言包：${progress}%`
-          : "正在準備本機語言包…";
-      });
-      translatedTitle.textContent = await translateWithPreparedTranslator(translator, source.translationTitle);
-      translationStatus.textContent = `由 ${source.translationLanguage === "ja" ? "日文" : "英文"} 離線翻譯為繁體中文。`;
-      retryButton.hidden = true;
-    } catch (error) {
-      translationStatus.textContent = error?.message || "本機翻譯失敗。";
-    } finally {
-      try { translator?.destroy?.(); } catch { /* Ignore cleanup failures. */ }
-      retryButton.disabled = false;
-    }
-  };
-}
-
-async function destroyPreparedTranslators(promises) {
-  for (const promise of Object.values(promises)) {
-    const prepared = await promise;
-    try {
-      prepared?.translator?.destroy?.();
-    } catch {
-      // Translator cleanup failure must not alter the completed lookup result.
-    }
-  }
 }

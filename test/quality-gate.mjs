@@ -21,7 +21,6 @@ const REQUIRED_TEST_IMPORTS = [
   "./nhentai/nhentai-v2.test.mjs",
   "./source/message-schema-v2.test.mjs",
   "./source/message-context-v2.test.mjs",
-  "./translation/offline-translation.test.mjs",
   "./matching/text-normalization.test.mjs",
   "./matching/matching-evaluation.test.mjs",
   "./security/accessibility-v2.test.mjs",

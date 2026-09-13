@@ -13,12 +13,12 @@
         <label for="lookup-numbers">六位數號碼（最多 10 組）</label>
         <textarea id="lookup-numbers" name="lookup-numbers" inputmode="numeric" autocomplete="off" maxlength="100" required aria-describedby="format-help" rows="5"></textarea>
         <p id="format-help">以換行、空白或逗號分隔 1 至 10 組號碼；查詢會依序進行，避免超過來源 API 的速率限制。</p>
-        <button id="lookup-button" type="submit">批次查詢</button>
+        <button id="lookup-button" type="submit">查詢</button>
       </form>
       <p id="status" role="status" aria-live="polite" aria-atomic="true"></p>
 
       <section id="batch-results" hidden aria-labelledby="batch-results-heading">
-        <h2 id="batch-results-heading">批次結果</h2>
+        <h2 id="batch-results-heading">結果</h2>
         <div id="batch-result-list"></div>
       </section>
     </main>
