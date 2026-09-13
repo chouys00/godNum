@@ -11,5 +11,6 @@
 | ACC-A4-001 | A4 | non-blocking | superseded | 修訂 5 取消舊跨來源配對階段 | 2026-09-12 | 範圍變更 |
 | ACC-A5-001 | A5 | non-blocking | superseded | 修訂 5 取消舊 DLsite 整合驗收；新實作另立 I2／A6 | 2026-09-12 | 範圍變更 |
 | ACC-A6-001 | A6 | blocking | pending | 待使用者完成第一版整體操作驗收 |  |  |
+| ACC-I2-002 | I2 | non-blocking | passed | v0.4.1 共用排程 20／10 次滑動窗口、計時器延遲、重啟與 429 冷卻、取消、儲存故障、查詢隔離、串流 UI、候選去重測試與完整品質閘門通過；模擬數據見 QUERY_PERFORMANCE.md，非實站驗收 | 2026-09-13 | Codex |
 
 只有使用者能把 blocking 項目設為 `waived`，並須記錄原因與日期。所有 pending 補驗仍須保留到 A6，不因階段技術 gate 通過而消失。

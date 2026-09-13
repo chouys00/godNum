@@ -8,9 +8,36 @@ import {
   parseGalleryResponse
 } from "../adapters/nhentai/nhentai-v2.js";
 
+import { createApiScheduler, createRateStore } from "./api-scheduler.js";
+
 const REQUEST_TIMEOUT_MS = 20000;
-const MIN_API_REQUEST_INTERVAL_MS = 3100;
-let nextApiRequestAt = 0;
+const schedule = createApiScheduler(createRateStore(chrome.storage.local));
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "lookup" || !isSidePanelSender(port.sender, chrome.runtime.id, chrome.runtime.getURL(""))) {
+    port.disconnect(); return;
+  }
+  let started = false;
+  let disconnected = false;
+  const controller = new AbortController();
+  port.onDisconnect.addListener(() => { disconnected = true; controller.abort(); });
+  const emit = (message) => {
+    if (disconnected) return;
+    try { port.postMessage(message); }
+    catch { disconnected = true; controller.abort(); }
+  };
+  port.onMessage.addListener((message) => {
+    if (message?.type === "PING") { emit({ type: "PONG" }); return; }
+    if (started) return;
+    started = true;
+    if (validateRuntimeMessage(message) !== "BATCH_LOOKUP") {
+      emit({ type: "ERROR", error: "訊息格式無效。" }); return;
+    }
+    handleBatchLookup(message.numbers, emit, controller.signal)
+      .then(() => emit({ type: "DONE" }))
+      .catch((error) => emit({ type: "ERROR", error: safeErrorMessage(error) }));
+  });
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -36,66 +63,75 @@ async function handleMessage(message, sender) {
   return { ok: true, result: await lookupNumber(validation.value) };
 }
 
-async function handleBatchLookup(numbers) {
+async function handleBatchLookup(numbers, emit = () => {}, signal) {
   const validation = validateBatchLookupNumbers(numbers.join("\n"));
   if (!validation.ok) return { ok: false, error: validation.message };
 
   const results = [];
+  const searches = new Map();
   for (const number of validation.value) {
+    if (signal?.aborted) break;
     try {
-      results.push({ number, ok: true, result: await lookupNumber(number) });
+      results.push({ number, ok: true, result: await lookupNumber(number, searches, (source) => emit({ type: "SOURCE", number, source }), signal) });
     } catch (error) {
       results.push({ number, ok: false, error: safeErrorMessage(error) });
     }
+    emit({ type: "RESULT", entry: results[results.length - 1] });
   }
   return { ok: true, results };
 }
 
-async function lookupNumber(number) {
-  const galleryPayload = await fetchJson(buildGalleryApiUrl(number));
+async function lookupNumber(number, searches = new Map(), onSource = () => {}, signal) {
+  const galleryPayload = await fetchJson(buildGalleryApiUrl(number), "gallery", signal);
   const source = parseGalleryResponse(galleryPayload, number);
+  onSource(source);
   let chineseVersions = [];
   let versionsError = null;
   try {
-    const searchPayload = await fetchJson(buildSearchApiUrl(source.searchTitle));
+    const url = buildSearchApiUrl(source.searchTitle);
+    const searchPayload = searches.has(url) ? searches.get(url) : await fetchJson(url, "search", signal);
     chineseVersions = findChineseVersions(searchPayload, source);
+    searches.set(url, {
+      result: searchPayload.result.slice(0, 25)
+        .filter((item) => item && typeof item === "object")
+        .map(({ id, english_title, japanese_title, num_pages }) => ({ id, english_title, japanese_title, num_pages }))
+    });
   } catch (error) {
     versionsError = safeErrorMessage(error);
   }
   return { source, chineseVersions, versionsError };
 }
 
-async function fetchJson(url) {
-  await waitForApiRequestSlot();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      credentials: "omit",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-      headers: { Accept: "application/json" },
-      signal: controller.signal
-    });
-    if (response.status === 404) throw new Error("找不到這個作品。");
-    if (response.status === 429) throw new Error("來源 API 已達速率限制，請稍後再試。");
-    if (!response.ok) throw new Error(`來源 API 回傳 HTTP ${response.status}。`);
-    return await response.json();
-  } catch (error) {
-    if (error?.name === "AbortError") throw new Error("來源 API 查詢逾時。");
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function waitForApiRequestSlot() {
-  const now = Date.now();
-  const requestAt = Math.max(now, nextApiRequestAt);
-  nextApiRequestAt = requestAt + MIN_API_REQUEST_INTERVAL_MS;
-  const waitMs = requestAt - now;
-  if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+async function fetchJson(url, kind, signal) {
+  return schedule(kind, async (backoff) => {
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    signal?.addEventListener("abort", abort, { once: true });
+    if (signal?.aborted) controller.abort();
+    const timeout = setTimeout(abort, REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        credentials: "omit",
+        cache: "no-store",
+        redirect: "error",
+        referrerPolicy: "no-referrer",
+        headers: { Accept: "application/json" },
+        signal: controller.signal
+      });
+      if (response.status === 429 || response.status === 503) backoff(response.headers.get("Retry-After"));
+      if (response.status === 404) throw new Error("找不到這個作品。");
+      if (response.status === 429) throw new Error("來源 API 已達速率限制，後續請求將等待冷卻後再送出。");
+      if (!response.ok) throw new Error(`來源 API 回傳 HTTP ${response.status}。`);
+      return await response.json();
+    } catch (error) {
+      if (error?.name === "AbortError") throw new Error(signal?.aborted ? "查詢已取消。" : "來源 API 查詢逾時。");
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+    }
+  }, () => signal?.aborted === true);
 }
 
 function safeErrorMessage(error) {

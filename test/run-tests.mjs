@@ -6,4 +6,7 @@ import "./matching/text-normalization.test.mjs";
 import "./matching/matching-evaluation.test.mjs";
 await import("./security/accessibility-v2.test.mjs");
 await import("./manifest-check-v2.mjs");
+await import("./nhentai/api-scheduler.test.mjs");
+await import("./nhentai/lookup-stream.test.mjs");
+await import("./nhentai/side-panel-stream.test.mjs");
 console.log("All offline tests passed.");

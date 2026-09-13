@@ -5,6 +5,7 @@ const input = document.querySelector("#lookup-numbers");
 const lookupButton = document.querySelector("#lookup-button");
 const status = document.querySelector("#status");
 const resultList = document.querySelector("#batch-result-list");
+const cards = new Map();
 
 function showStatus(message, kind = "info") {
   status.textContent = `${kind === "error" ? "錯誤" : "狀態"}：${message}`;
@@ -13,6 +14,7 @@ function showStatus(message, kind = "info") {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (lookupButton.disabled) return;
   const validation = validateBatchLookupNumbers(input.value);
   if (!validation.ok) {
     input.setAttribute("aria-invalid", "true");
@@ -23,17 +25,10 @@ form.addEventListener("submit", async (event) => {
   clearResults();
 
   lookupButton.disabled = true;
-  showStatus(`正在依序查詢 ${validation.value.length} 組來源資料與中文版本；10 組通常約需一分鐘，來源較慢時可能更久。`);
+  showStatus(`正在查詢 ${validation.value.length} 組；取得資料後會立即顯示，中文版本隨後補上。`);
   try {
-    const response = await chrome.runtime.sendMessage({ type: "BATCH_LOOKUP", numbers: validation.value });
-    if (!response?.ok || !Array.isArray(response.results)) {
-      input.setAttribute("aria-invalid", "true");
-      showStatus(response?.error || "查詢失敗。", "error");
-      return;
-    }
-    renderBatchResults(response.results);
-    const completed = response.results.filter((entry) => entry.ok).length;
-    showStatus(`查詢完成：${completed}/${response.results.length} 組已取得資料。`);
+    const completed = await streamResults(validation.value);
+    showStatus(`查詢完成：${completed}/${validation.value.length} 組已取得資料。`);
   } catch (error) {
     showStatus(error?.message || "查詢失敗。", "error");
   } finally {
@@ -41,22 +36,80 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+function streamResults(numbers) {
+  return new Promise((resolve, reject) => {
+    const port = chrome.runtime.connect({ name: "lookup" });
+    let finished = false;
+    let completed = 0;
+    let processed = 0;
+    // Chrome 114 requires messages (an open port alone is insufficient) to
+    // keep a long rate-limited batch alive. No network traffic is generated.
+    const heartbeat = setInterval(() => {
+      try { port.postMessage({ type: "PING" }); }
+      catch { finish(new Error("查詢連線已中斷，請重新查詢。")); }
+    }, 20000);
+    function finish(error) {
+      if (finished) return;
+      finished = true;
+      clearInterval(heartbeat);
+      window.removeEventListener("pagehide", close);
+      port.disconnect();
+      for (const card of cards.values()) {
+        const pending = card.querySelector(".versions-pending");
+        if (pending) pending.textContent = "中文版本查詢已中斷，請重新查詢。";
+      }
+      if (error) reject(error); else resolve(completed);
+    }
+    const close = () => finish(new Error("查詢已取消。"));
+    window.addEventListener("pagehide", close, { once: true });
+    port.onDisconnect.addListener(() => {
+      const error = chrome.runtime.lastError;
+      finish(new Error(error?.message || "查詢連線已中斷，請重新查詢。"));
+    });
+    port.onMessage.addListener((message) => {
+      if (finished) return;
+      if (message.type === "SOURCE" && numbers.includes(message.number)) {
+        renderBatchResults([{ number: message.number, ok: true, pending: true, result: { source: message.source } }]);
+      } else if (message.type === "RESULT" && numbers.includes(message.entry?.number)) {
+        renderBatchResults([message.entry]);
+        processed += 1;
+        if (message.entry.ok) completed += 1;
+        showStatus(`已完成 ${processed}/${numbers.length} 組；其餘請求依來源速率限制排程。`);
+      } else if (message.type === "DONE") finish();
+      else if (message.type === "ERROR") finish(new Error(message.error || "查詢失敗。"));
+    });
+    try { port.postMessage({ type: "BATCH_LOOKUP", numbers }); }
+    catch (error) { finish(error); }
+  });
+}
+
 function renderBatchResults(entries) {
   resultList.hidden = false;
   for (const entry of entries) {
-    const card = document.createElement("article");
+    let card = cards.get(entry.number);
+    if (!card) {
+      card = document.createElement("article");
+      cards.set(entry.number, card);
+      resultList.append(card);
+    }
+    // Once source fields are visible, keep their nodes and keyboard focus.
+    const oldVersions = card.querySelector(".chinese-versions");
+    if (oldVersions && entry.ok && !entry.pending) {
+      oldVersions.remove();
+      renderVersions(card, entry.result.chineseVersions, entry.result.versionsError);
+      continue;
+    }
+    card.replaceChildren();
     card.className = "batch-result";
     const heading = document.createElement("h3");
     heading.textContent = `作品資料（${entry.number}）`;
     card.append(heading);
     if (!entry.ok) {
       addMessage(card, entry.error || "查詢失敗。", "error");
-      resultList.append(card);
       continue;
     }
     renderSource(card, entry.result.source);
-    renderVersions(card, entry.result.chineseVersions, entry.result.versionsError);
-    resultList.append(card);
+    renderVersions(card, entry.result.chineseVersions, entry.result.versionsError, entry.pending);
   }
 }
 
@@ -70,7 +123,7 @@ function renderSource(card, source) {
   card.append(fields);
 }
 
-function renderVersions(card, versions, error) {
+function renderVersions(card, versions, error, pending = false) {
   const section = document.createElement("section");
   const heading = document.createElement("h4");
   const message = document.createElement("p");
@@ -78,7 +131,11 @@ function renderVersions(card, versions, error) {
   section.className = "chinese-versions";
   heading.textContent = "中文版本";
   section.append(heading, message, links);
-  if (error) message.textContent = `中文版本搜尋失敗：${error}`;
+  if (pending) {
+    message.className = "versions-pending";
+    message.textContent = "正在查詢中文版本…";
+  }
+  else if (error) message.textContent = `中文版本搜尋失敗：${error}`;
   else if (!Array.isArray(versions) || versions.length === 0) message.textContent = "沒有找到通過同作核對的中文版本。";
   else {
     message.remove();
@@ -140,6 +197,7 @@ function addMessage(parent, message, kind) {
 }
 
 function clearResults() {
+  cards.clear();
   resultList.replaceChildren();
   resultList.hidden = true;
 }

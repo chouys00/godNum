@@ -7,7 +7,7 @@ const argumentsAfterNode = process.argv.slice(2);
 const ROOT = path.resolve(argumentsAfterNode.find((argument) => !argument.startsWith("--")) || ".");
 const RUN_TESTS = !argumentsAfterNode.includes("--skip-tests");
 const EXPECTED_ROOT_MANIFEST = {
-  permissions: ["sidePanel", "search"],
+  permissions: ["sidePanel", "search", "storage"],
   hostPermissions: ["https://nhentai.net/*"],
   csp: "script-src 'self'; object-src 'self'"
 };
@@ -17,6 +17,9 @@ const EXPECTED_PROBE_MANIFEST = {
   csp: "script-src 'self'; object-src 'self'"
 };
 const REQUIRED_TEST_IMPORTS = [
+  "./nhentai/api-scheduler.test.mjs",
+  "./nhentai/lookup-stream.test.mjs",
+  "./nhentai/side-panel-stream.test.mjs",
   "./lookup.test.mjs",
   "./nhentai/nhentai-v2.test.mjs",
   "./source/message-schema-v2.test.mjs",
