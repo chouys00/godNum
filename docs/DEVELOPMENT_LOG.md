@@ -249,3 +249,24 @@
 - 翻譯可靠性：同一次提交會在 user activation 尚有效時準備日文與英文 translator；若其中一組首次下載被拒絕，UI 提供只建立實際語言組合的「重試本機翻譯」按鈕。
 - 語言選擇：翻譯前先移除尾端版本標記，再以假名／漢字判為日文；純羅馬字標題改走英文語言包，避免被 `[中国翻訳]` 標記中的漢字誤判為日文。
 - 限制：真實 Chrome 語言包與側邊面板流程仍保留到 SUP-A6-001，不寫成已通過。
+
+## 2026-09-12｜修訂 7／批次查詢
+
+- 使用者需求：一次輸入 5–10 組號碼並批次回傳資訊。
+- 實作：v0.3.1 將單行輸入改為 textarea，接受換行、空白、半形或全形逗號分隔的 5–10 組唯一六位數號碼。背景新增受嚴格 schema 驗證的 `BATCH_LOOKUP` 訊息，逐筆回傳成功資料或安全錯誤；單筆失敗不會中止整批。來源 API 請求以至少 3.1 秒間距排程，避免超過匿名限制。
+- 介面與隱私：每筆獨立顯示來源欄位、中文版本、翻譯狀態與必要時的重試按鈕；所有 DOM 文字使用 `textContent`，不新增權限、儲存、Cookie 或查詢留存。
+- 測試：`node test/run-tests.mjs` 通過（含批次輸入與 runtime schema 邊界）；`node test/quality-gate.mjs` 通過（49 個 JavaScript 檔案、manifest、CSP、權限、禁止 API、語法與完整離線測試）。`git diff --check` 通過。
+- 限制與下一步：未在真實 Chrome 執行批次流程或驗證 API 的實際速率行為；SUP-A6-001 維持 pending，A6 為 `implementation_complete`／`CONCERNS`，不得標記最終 accepted。
+
+## 2026-09-13｜修訂 8／取消批次最少組數
+
+- 使用者決定：批次輸入不設最低組數，但最多 10 組。
+- 實作：v0.3.2 將批次輸入與 runtime schema 的下限從 5 改為 1；介面提示、規格、Roadmap、控制狀態與補驗步驟同步改為 1–10 組。
+- 驗證：依使用者明確指示，未執行測試、品質閘門或 Chrome 實機驗收；SUP-A6-001 維持 pending。
+
+## 2026-09-13｜修訂 9／作品欄位搜尋連結
+
+- 使用者需求：原始標題、作者／署名及社團有資料時顯示為與來源頁一致的超連結；點擊後在 Chrome 搜尋該字串。
+- 實作：v0.3.3 新增安全的搜尋欄位 renderer；非空值以 `<a>` 呈現，點擊時呼叫 `chrome.search.query` 並在新分頁使用 Chrome 預設搜尋引擎。缺值維持不可點擊的「未提供」。
+- 權限：manifest 新增最小必要 `search` 權限；未新增 Google 或其他搜尋網域的 host permission，亦未保存查詢。
+- 驗證：`node test/run-tests.mjs` 與 `node test/run-quality-gate.mjs` 通過；49 個 JavaScript 檔案、manifest、CSP、權限、禁止 API、語法、離線測試及七種違規 fixture 均通過。Chrome 實際搜尋行為仍列入 SUP-A6-001。

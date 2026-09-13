@@ -4,14 +4,18 @@ main { display: grid; gap: 12px; padding: 16px; }
 h1 { font-size: 1.2rem; margin: 0; }
 h2 { font-size: 1rem; margin: 0; }
 form { display: grid; gap: 8px; }
-input, button { font: inherit; padding: 8px; }
-input:focus-visible, button:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
+input, textarea, button { font: inherit; padding: 8px; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
 p { margin: 0; }
 #status[data-kind="error"] { color: #b00020; }
-#source-result, #result, #translation-result, #chinese-versions { display: grid; gap: 8px; border-top: 1px solid currentColor; padding-top: 12px; }
-#source-fields { display: grid; grid-template-columns: max-content 1fr; gap: 4px 10px; margin: 0; }
-#source-fields dt { font-weight: 600; }
-#source-fields dd { margin: 0; overflow-wrap: anywhere; }
+#batch-results, .batch-result { display: grid; gap: 8px; border-top: 1px solid currentColor; padding-top: 12px; }
+#batch-result-list { display: grid; gap: 16px; }
+.batch-result h3, .batch-result h4 { margin: 0; font-size: 1rem; }
+.batch-result h4 { font-size: 0.9rem; }
+.source-fields { display: grid; grid-template-columns: max-content 1fr; gap: 4px 10px; margin: 0; }
+.source-fields dt { font-weight: 600; }
+.source-fields dd { margin: 0; overflow-wrap: anywhere; }
+.translation-result, .chinese-versions { display: grid; gap: 8px; }
 .note { font-size: 0.875rem; opacity: 0.8; }
 a { overflow-wrap: anywhere; }
 [hidden] { display: none !important; }

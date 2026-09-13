@@ -7,7 +7,7 @@ const argumentsAfterNode = process.argv.slice(2);
 const ROOT = path.resolve(argumentsAfterNode.find((argument) => !argument.startsWith("--")) || ".");
 const RUN_TESTS = !argumentsAfterNode.includes("--skip-tests");
 const EXPECTED_ROOT_MANIFEST = {
-  permissions: ["sidePanel"],
+  permissions: ["sidePanel", "search"],
   hostPermissions: ["https://nhentai.net/*"],
   csp: "script-src 'self'; object-src 'self'"
 };

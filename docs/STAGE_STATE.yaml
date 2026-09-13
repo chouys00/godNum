@@ -1,5 +1,5 @@
 schema_version: 2
-plan_revision: 6
+plan_revision: 9
 profile: audited
 
 stage_sequence:
@@ -20,8 +20,8 @@ stage_sequence:
 active_stage: A6
 stage_status: implementation_complete
 gate_result: CONCERNS
-last_assessment_date: 2026-09-12
-last_assessment_outcome: v0_3_0_offline_quality_pass_chrome_validation_pending
+last_assessment_date: 2026-09-13
+last_assessment_outcome: v0_3_3_search_links_implemented_chrome_validation_pending
 next_stage: A6
 handoff_mode: validate-current-stage
 review_required: true

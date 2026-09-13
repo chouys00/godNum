@@ -4,9 +4,9 @@ import { access, readFile } from "node:fs/promises";
 const manifest = JSON.parse(await readFile(new URL("../manifest.json", import.meta.url), "utf8"));
 assert.equal(manifest.manifest_version, 3);
 assert.equal(manifest.minimum_chrome_version, "138");
-assert.equal(manifest.version, "0.3.0");
+assert.equal(manifest.version, "0.3.3");
 assert.equal(manifest.background.type, "module");
-assert.deepEqual(manifest.permissions, ["sidePanel"]);
+assert.deepEqual(manifest.permissions, ["sidePanel", "search"]);
 assert.deepEqual(manifest.host_permissions, ["https://nhentai.net/*"]);
 assert.equal(Object.hasOwn(manifest, "content_scripts"), false);
 assert.equal(JSON.stringify(manifest).includes("<all_urls>"), false);
@@ -24,6 +24,7 @@ for (const [name, source] of [["side panel", sidePanel], ["service worker", work
   assert.equal(/document\.cookie|Authorization|chrome\.storage/iu.test(source), false, `${name} 不得讀取或保存敏感資料`);
 }
 assert.match(sidePanel, /createOfflineTranslator/);
+assert.match(sidePanel, /chrome\.search\.query\(\{ text: searchText, disposition: "NEW_TAB" \}\)/);
 assert.match(sidePanel, /\.textContent\s*=/);
 assert.match(worker, /validateRuntimeMessage/);
 assert.match(worker, /credentials:\s*"omit"/);

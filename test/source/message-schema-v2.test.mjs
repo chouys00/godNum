@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import { MAX_RUNTIME_MESSAGE_LENGTH, validateRuntimeMessage } from "../../src/core/message-schema-v2.js";
 
 assert.equal(validateRuntimeMessage({ type: "LOOKUP", number: "123456" }), "LOOKUP");
+assert.equal(validateRuntimeMessage({ type: "BATCH_LOOKUP", numbers: ["123456", "123457", "123458", "123459", "123460"] }), "BATCH_LOOKUP");
 assert.equal(validateRuntimeMessage({ type: "LOOKUP", number: 123456 }), null);
 assert.equal(validateRuntimeMessage({ type: "LOOKUP", number: "123456", extra: true }), null);
+assert.equal(validateRuntimeMessage({ type: "BATCH_LOOKUP", numbers: ["123456"] }), "BATCH_LOOKUP");
+assert.equal(validateRuntimeMessage({ type: "BATCH_LOOKUP", numbers: [] }), null);
+assert.equal(validateRuntimeMessage({ type: "BATCH_LOOKUP", numbers: ["123456", "123457", "123458", "123459", "123456"] }), null);
 assert.equal(validateRuntimeMessage({ type: "UNKNOWN", number: "123456" }), null);
 assert.equal(validateRuntimeMessage({ type: "LOOKUP", number: "x".repeat(MAX_RUNTIME_MESSAGE_LENGTH) }), null);
 const circular = { type: "LOOKUP", number: "123456" };

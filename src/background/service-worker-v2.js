@@ -1,4 +1,4 @@
-import { validateLookupNumber } from "../core/lookup.js";
+import { validateBatchLookupNumbers, validateLookupNumber } from "../core/lookup.js";
 import { validateRuntimeMessage } from "../core/message-schema-v2.js";
 import { isSidePanelSender } from "../core/message-context-v2.js";
 import {
@@ -9,6 +9,8 @@ import {
 } from "../adapters/nhentai/nhentai-v2.js";
 
 const REQUEST_TIMEOUT_MS = 20000;
+const MIN_API_REQUEST_INTERVAL_MS = 3100;
+let nextApiRequestAt = 0;
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -25,12 +27,33 @@ async function handleMessage(message, sender) {
   if (!isSidePanelSender(sender, chrome.runtime.id, chrome.runtime.getURL(""))) {
     return { ok: false, error: "訊息來源不可信。" };
   }
-  if (validateRuntimeMessage(message) !== "LOOKUP") return { ok: false, error: "訊息格式無效。" };
+  const messageType = validateRuntimeMessage(message);
+  if (!messageType) return { ok: false, error: "訊息格式無效。" };
+  if (messageType === "BATCH_LOOKUP") return await handleBatchLookup(message.numbers);
+
   const validation = validateLookupNumber(message.number);
   if (!validation.ok) return { ok: false, error: validation.message };
+  return { ok: true, result: await lookupNumber(validation.value) };
+}
 
-  const galleryPayload = await fetchJson(buildGalleryApiUrl(validation.value));
-  const source = parseGalleryResponse(galleryPayload, validation.value);
+async function handleBatchLookup(numbers) {
+  const validation = validateBatchLookupNumbers(numbers.join("\n"));
+  if (!validation.ok) return { ok: false, error: validation.message };
+
+  const results = [];
+  for (const number of validation.value) {
+    try {
+      results.push({ number, ok: true, result: await lookupNumber(number) });
+    } catch (error) {
+      results.push({ number, ok: false, error: safeErrorMessage(error) });
+    }
+  }
+  return { ok: true, results };
+}
+
+async function lookupNumber(number) {
+  const galleryPayload = await fetchJson(buildGalleryApiUrl(number));
+  const source = parseGalleryResponse(galleryPayload, number);
   let chineseVersions = [];
   let versionsError = null;
   try {
@@ -39,10 +62,11 @@ async function handleMessage(message, sender) {
   } catch (error) {
     versionsError = safeErrorMessage(error);
   }
-  return { ok: true, result: { source, chineseVersions, versionsError } };
+  return { source, chineseVersions, versionsError };
 }
 
 async function fetchJson(url) {
+  await waitForApiRequestSlot();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -64,6 +88,14 @@ async function fetchJson(url) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function waitForApiRequestSlot() {
+  const now = Date.now();
+  const requestAt = Math.max(now, nextApiRequestAt);
+  nextApiRequestAt = requestAt + MIN_API_REQUEST_INTERVAL_MS;
+  const waitMs = requestAt - now;
+  if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
 }
 
 function safeErrorMessage(error) {

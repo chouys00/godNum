@@ -6,7 +6,7 @@
 | ACC-A2-001 | A2 | non-blocking | pending | SUP-A2-001；待依 REQ-013 核對可存取案例的來源標題與作者／社團 |  |  |
 | ACC-F1-001 | F1 | blocking | superseded | 2026-09-12 修訂 5 已取消 DLsite 目標；歷史 FAIL 保留，但不再要求 Probe 0.2.0 重測 | 2026-09-12 | 範圍變更 |
 | ACC-V2-001 | V2 | blocking | failed | 10 筆留置樣本僅 1 筆取得具來源中文別名，首次取得率 10%，0 次已知誤配；未達 8/10 門檻 | 2026-09-12 | Codex 實測，待使用者決策 |
-| ACC-I2-001 | I2 | non-blocking | passed | v0.3.0 adapter、訊息、離線翻譯 wrapper、manifest 與無障礙測試通過；`npm run quality` 通過 | 2026-09-12 | Codex |
+| ACC-I2-001 | I2 | non-blocking | passed | v0.3.3 adapter、批次訊息 schema、輸入驗證、搜尋連結、離線翻譯、manifest 與無障礙測試通過；`npm run quality` 通過 | 2026-09-13 | Codex |
 | ACC-A3-001 | A3 | non-blocking | superseded | 修訂 5 取消 DLsite 候選階段 | 2026-09-12 | 範圍變更 |
 | ACC-A4-001 | A4 | non-blocking | superseded | 修訂 5 取消舊跨來源配對階段 | 2026-09-12 | 範圍變更 |
 | ACC-A5-001 | A5 | non-blocking | superseded | 修訂 5 取消舊 DLsite 整合驗收；新實作另立 I2／A6 | 2026-09-12 | 範圍變更 |
