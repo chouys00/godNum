@@ -4,7 +4,6 @@ const form = document.querySelector("#lookup-form");
 const input = document.querySelector("#lookup-numbers");
 const lookupButton = document.querySelector("#lookup-button");
 const status = document.querySelector("#status");
-const resultsSection = document.querySelector("#batch-results");
 const resultList = document.querySelector("#batch-result-list");
 
 function showStatus(message, kind = "info") {
@@ -43,7 +42,7 @@ form.addEventListener("submit", async (event) => {
 });
 
 function renderBatchResults(entries) {
-  resultsSection.hidden = false;
+  resultList.hidden = false;
   for (const entry of entries) {
     const card = document.createElement("article");
     card.className = "batch-result";
@@ -142,5 +141,5 @@ function addMessage(parent, message, kind) {
 
 function clearResults() {
   resultList.replaceChildren();
-  resultsSection.hidden = true;
+  resultList.hidden = true;
 }

@@ -8,7 +8,7 @@ input, textarea, button { font: inherit; padding: 8px; }
 input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
 p { margin: 0; }
 #status[data-kind="error"] { color: #b00020; }
-#batch-results, .batch-result { display: grid; gap: 8px; border-top: 1px solid currentColor; padding-top: 12px; }
+.batch-result { display: grid; gap: 8px; border-top: 1px solid currentColor; padding-top: 12px; }
 #batch-result-list { display: grid; gap: 16px; }
 .batch-result h3, .batch-result h4 { margin: 0; font-size: 1rem; }
 .batch-result h4 { font-size: 0.9rem; }
